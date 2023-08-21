@@ -24,7 +24,7 @@ class Vidstream():
             if feed == False:
                 self.endStream()
     
-    def displayStream(self,object=None):
+    def displayStream(self):
         cv.imshow("frame", self.capture)
         command = cv.waitKey(1)
         if command == ord("q"):
