@@ -74,6 +74,7 @@ class Graph():
         self.a = np.take(coefficients,0)
         self.b = np.take(coefficients,1)
         self.c = np.take(coefficients,2)
+
     
     def tweak(self,x,y):
         predictedy = self.a*(x**2)+self.b*(x)+self.c
@@ -93,6 +94,7 @@ class Graph():
             except:
                 pass
 
+
 class TrackRec():
     
     def __init__(self):
@@ -105,7 +107,12 @@ class TrackRec():
         mask = cv.inRange(hsv,colourRange[0],colourRange[1])
         self.isolated= cv.bitwise_and(hsv,hsv,mask=mask)
         return self.isolated
-    
+    def speed(self, coord1, coord2):
+        self.hdistance=coord1[0]-coord2[0]
+        # find hspeed dividing the centres by the time between the two frames, return velocity
+        #  
+
+
     def recognise(self):
         #uses mask to find targets
         pass
@@ -118,7 +125,7 @@ class TrackRec():
 
 Test = Vidstream()
 x = Graph()
-x.plot((200,240),(257,240),(0,0))
+x.plot((200,240),(257,240),(0,300))
 x.points()
 #x.displayPlot(Test)
 Test.stream(x)
