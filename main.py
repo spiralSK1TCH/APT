@@ -1,16 +1,23 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2 as cv
+
+
 class Vidstream():
-    
+        
     def __init__(self):
+
+        self.window = cv.namedWindow("frame")
+        self.UI = UserInput()
+        cv.setMouseCallback("frame",self.UI.handle(),0)
         self.vidstream = cv.VideoCapture(-1)
         if not self.vidstream.isOpened():
             print("Check if turret is attached")
             self.vidstream.open(-1)
         self.tracker = TrackRec()
     
-    def stream(self,graph=None):    
+    def stream(self,graph=None):   
+        
         while True:
             self.webcamOn, self.capture = self.vidstream.read()
             if not self.webcamOn:
@@ -29,6 +36,7 @@ class Vidstream():
         command = cv.waitKey(1)
         if command == ord("q"):
             return False
+        
 
     def internalStream(self):
         cv.imshow("frame", self.hidden)
@@ -107,10 +115,11 @@ class TrackRec():
         mask = cv.inRange(hsv,colourRange[0],colourRange[1])
         self.isolated= cv.bitwise_and(hsv,hsv,mask=mask)
         return self.isolated
+    
     def speed(self, coord1, coord2):
         self.hdistance=coord1[0]-coord2[0]
-        # find hspeed dividing the centres by the time between the two frames, return velocity
-        #  
+        # find hspeed dividing the centres by the time between the two frames, return velocity 
+        
 
 
     def recognise(self):
@@ -119,9 +128,38 @@ class TrackRec():
     
     def centre(self): 
         # this will find centre of recognised objects
+    
+    
+    
+    
+        pass
+    
+class UserInput():
+    def __init__(self):
+        pass
+    def handle(self, event, x, y, flags, para):
+        match event:
+            case cv.EVENT_LBUTTONDOWN:
+                pass
+            case cv.EVENT_LBUTTONDBLCLK:
+                pass
+            case cv.EVENT_RBUTTONDOWN:
+                pass
+            case cv.EVENT_RBUTTONDBLCLK:
+                pass
+            case _:
+                pass
+    def shoot():
+        pass
+    def track():
+        pass
+    def close():
         pass
 
-
+class GUI():
+    def __init__(self):
+        pass
+    
 
 Test = Vidstream()
 x = Graph()
