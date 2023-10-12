@@ -1,7 +1,9 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2 as cv
-
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
+#from PyQt5.GUI import *
 
 class Vidstream():
         
@@ -9,8 +11,9 @@ class Vidstream():
 
         self.window = cv.namedWindow("frame")
         self.UI = UserInput()
-        cv.setMouseCallback("frame",self.UI.handle(),0)
+        cv.setMouseCallback("frame",self.UI.handle,0)
         self.vidstream = cv.VideoCapture(-1)
+        cv.VideoCapture.set(cv.CAP_PROP_MODE,cv.CAP_MODE_GRAY)
         if not self.vidstream.isOpened():
             print("Check if turret is attached")
             self.vidstream.open(-1)
@@ -118,6 +121,7 @@ class TrackRec():
     
     def speed(self, coord1, coord2):
         self.hdistance=coord1[0]-coord2[0]
+        
         # find hspeed dividing the centres by the time between the two frames, return velocity 
         
 
@@ -137,7 +141,7 @@ class TrackRec():
 class UserInput():
     def __init__(self):
         pass
-    def handle(self, event, x, y, flags, para):
+    def handle(self,event, x, y, flags, para):
         match event:
             case cv.EVENT_LBUTTONDOWN:
                 pass
@@ -156,9 +160,11 @@ class UserInput():
     def close():
         pass
 
-class GUI():
+class Menu():
     def __init__(self):
         pass
+        
+        
     
 
 Test = Vidstream()
