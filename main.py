@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2 as cv
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
+#from PyQt5.QtCore import *
+#from PyQt5.QtWidgets import *
 #from PyQt5.GUI import *
 
 class Vidstream():
@@ -12,11 +12,12 @@ class Vidstream():
         self.window = cv.namedWindow("frame")
         self.UI = UserInput()
         cv.setMouseCallback("frame",self.UI.handle,0)
-        self.vidstream = cv.VideoCapture(-1)
-        cv.VideoCapture.set(cv.CAP_PROP_MODE,cv.CAP_MODE_GRAY)
+        self.vidstream = cv.VideoCapture(0, cv.CAP_V4L)
+        self.vidstream.set(cv.CAP_PROP_MODE,3)
+        print(self.vidstream)
         if not self.vidstream.isOpened():
             print("Check if turret is attached")
-            self.vidstream.open(-1)
+            self.vidstream.open(0, cv.CAP_V4L)
         self.tracker = TrackRec()
     
     def stream(self,graph=None):   
@@ -33,6 +34,7 @@ class Vidstream():
             #feed = self.internalStream()
             if feed == False:
                 self.endStream()
+                break
     
     def displayStream(self):
         cv.imshow("frame", self.capture)
@@ -66,7 +68,6 @@ class Graph():
         
         self.x = np.array(self.x, dtype=int)
         self.x2= np.array(self.x2,dtype=int)
-
         self.atweak, self.btweak, self.ctweak = 1,1,1
 
     def plot(self,coord1,coord2,coord3): #changed from x1,y1,x2.. to coords 
