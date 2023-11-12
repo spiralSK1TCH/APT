@@ -89,6 +89,7 @@ class Graph():
         
         x2term = np.multiply(self.a,self.x2)    # a multiplied over x2
         xterm  = np.multiply(self.b,self.x)     # b multiplied over x
+        cterm  = self.c 
         yterm  = (x2term+xterm+cterm)           # add together ax2 + bx +c to get y
         self.y = yterm.astype(int)              # y must be a list of integers, as all pixel coordinates are integers
     
