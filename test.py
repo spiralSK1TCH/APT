@@ -10,7 +10,7 @@ class Vidstream():
         
         self.vidstream = cv.VideoCapture(-1,cv.CAP_V4L)         # Connect to last connected camera/webcam
         self.window = cv.namedWindow("frame")                   # Create a window named frame to display things on
-        cv.setMouseCallback("frame", mouseCallbackPlaceholder)  # Clicks on the frame window get handled by a function 
+        cv.setMouseCallback("frame", mouseCallback, self)       # Clicks on the frame window get handled by a function that references the function
         # If the camera is not open, try to open it manually
         if not self.vidstream.isOpened():
             print("Check if turret is attached")
@@ -30,6 +30,9 @@ class Vidstream():
             if not self.webcamOn:
                 print("Error, frame not captured")
                 break
+            # If a graph exists, plot it
+            if graph:
+                graph.displayPlot(self)
             # Or if the user tells you to stop, stop
             frame = self.displayStream()
             if not frame:
@@ -89,7 +92,6 @@ class Graph():
         
         x2term = np.multiply(self.a,self.x2)    # a multiplied over x2
         xterm  = np.multiply(self.b,self.x)     # b multiplied over x
-        cterm  = self.c 
         yterm  = (x2term+xterm+cterm)           # add together ax2 + bx +c to get y
         self.y = yterm.astype(int)              # y must be a list of integers, as all pixel coordinates are integers
     
@@ -107,8 +109,16 @@ class Graph():
         
 # Arduino control class
 class Arduino():
+
     def __init__(self):
         pass
+    
+    def moveTurret(self, coordinates, TargetDepthSpeed=None):
+        pass
+    
+    def shootTurret(self):
+        pass
+
 
 # Track and records target positions
 class TrackRec():
@@ -120,11 +130,30 @@ def func():
     pass
 
 # Placeholder function specifically for the setMouseCalback function
-def mouseCallbackPlaceholder(event, x, y, flags, param):
-    pass
+def mouseCallback(event, x, y, flags, vidstreamInstance):
+    match event:
+        # If the event is a leftclick 
+        case cv.EVENT_LBUTTONDOWN:   
+            # Draw crosshairs
+            
+            # Move the turret to that location and shoot
+            vidstreamInstance.arduinoControl.moveTurret((x,y))
+            vidstreamInstance.arduinoControl.shootTurret()
+        
+
+        # If the event is a rightclick
+        case cv.EVENT_RBUTTONDOWN:
+            pass
+
+def drawCrosshairs(x, y, vidstreamInstance = None):
+    if not vidstreamInstance:
+        pass
+
+
+     
 
 # Code to activate the class
 #test = Vidstream()
 #test.stream()
 graph= Graph()
-graph.plot((50,0), (50,40), (50,25))
+graph.plot((50,22), (7,40), (10,25))
