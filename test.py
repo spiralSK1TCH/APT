@@ -33,6 +33,8 @@ class Vidstream():
             # If a graph exists, plot it
             if graph:
                 graph.displayPlot(self)
+            # If a face is in the capture, plot a box around it
+            self.tracker.findFaces(self.capture)
             # Or if the user tells you to stop, stop
             frame = self.displayStream()
             if not frame:
@@ -92,6 +94,7 @@ class Graph():
         
         x2term = np.multiply(self.a,self.x2)    # a multiplied over x2
         xterm  = np.multiply(self.b,self.x)     # b multiplied over x
+        cterm  = self.c
         yterm  = (x2term+xterm+cterm)           # add together ax2 + bx +c to get y
         self.y = yterm.astype(int)              # y must be a list of integers, as all pixel coordinates are integers
     
@@ -150,10 +153,53 @@ def drawCrosshairs(x, y, vidstreamInstance = None):
         pass
 
 
-     
+# Class that identifies and tracks targets
+class TrackRec():
+    
+    # Setup
+    def __init__(self):
+        # Hold stack of last seen positions
+        self.lastSeenPositions = []
+        # Call classifier method for targets and faces
+        self.targetCascade = cv.CascadeClassifier()
+        self.faceCascade = cv.CascadeClassifier()
+        # Load cascade classifiers, if not found exit
+        if not self.faceCascade.load(cv.samples.findFile(".venv/lib64/python3.11/site-packages/cv2/data/haarcascade_frontalface_default.xml")):
+            print("No face cascade found")
+            exit(0)
+        #if not self.targetCascade.load(cv.samples.findFile):
+        #    print("No target cascade found")
+        #    exit(0)
+
+    # Face recognition method
+    def findFaces(self,frame):
+        # Make frame greysclae
+        frameGray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY) 
+        # Make grayscale image sharper.
+        self.frameGray = cv.equalizeHist(frameGray)    
+        # Detect faces
+        faces = self.faceCascade.detectMultiScale(frameGray, 1.1 ,4)
+        # for each rectangle in faces
+        for (x,y,w,h) in faces:
+            # Draw box around faces
+            cv.rectangle(frame, (x,y), (x+w, y+h),(255,0,0), 2 )
+
+    # Target recognition method
+    def findTargets(self, frame):
+        # Detect targets
+        targets = self.targetCascade.detectMultiScale(self.frameGray, 1.1, 4)
+        # for every rectangle in targets
+        for (x,y,w,h) in targets:
+            # Draw box around faces
+            cv.rectangle(frame, (x,y), (x+w, y+h), (0,0,255), 2)
+            # Find centre of rectangle
+            centre = (x+(w/2),y+(h/2))
+        
+
+         
 
 # Code to activate the class
-#test = Vidstream()
-#test.stream()
+test = Vidstream()
+test.stream()
 graph= Graph()
 graph.plot((50,22), (7,40), (10,25))
