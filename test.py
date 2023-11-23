@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2 as cv
+import zmq
+import os
 
 # Class for controling camera input 
 class Vidstream():
@@ -56,6 +58,8 @@ class Vidstream():
     def endStream(self):
         self.vidstream.release()
         cv.destroyAllWindows()
+        socket.send_string("X")
+        socket.close()
 
 # Class to find equation of projectile movement
 class Graph():
@@ -113,8 +117,21 @@ class Graph():
 # Arduino control class
 class Arduino():
 
+    # Initialise connection with the arduino.py file
     def __init__(self):
-        pass
+        os.system("./arduinoRun.sh")
+        print("Connecting to Arduino...")
+        try:
+            # Get context to set up the TCP port
+            context = zmq.Context()
+            # Create a request socket on this port (Global so it can be shutdown)
+            global socket
+            socket = context.socket(zmq.REQ)
+            # Bind the request socket to the TCP port
+            socket.connect("tcp://localhost:5555")
+        except:
+            print("Could not connect")
+            exit(0)
     
     def moveTurret(self, coordinates, TargetDepthSpeed=None):
         pass
@@ -194,6 +211,7 @@ class TrackRec():
             cv.rectangle(frame, (x,y), (x+w, y+h), (0,0,255), 2)
             # Find centre of rectangle
             centre = (x+(w/2),y+(h/2))
+            self.lastSeenPositions.append(centre)
         
 
          

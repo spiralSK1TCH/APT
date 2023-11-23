@@ -1,37 +1,50 @@
-int servo1 = 5;   // The PWM pin servo1 is attached to
-int servo2 = 6;   // The PWM pin servo1 is attached to
-int shoot = 7;    // The data pin shoot is attached to
+#include <Servo.h>
+
+Servo servo1;
+Servo servo2;
+
+const int shoot = 7;    // The data pin shoot is attached to
 
 void setup() {
+  // attach servos to pins
+  servo1.attach(5);
+  servo2.attach(6);
   // Declare pins to be outputs
-  pinMode(servo1, OUTPUT);
-  pinMode(servo2, OUTPUT);
   pinMode(shoot, OUTPUT);
   // Set serial baud rate
   Serial.begin(115200);
   // Send servos to the middle position
-  analogWrite(servo1, 128);
-  analogWrite(servo2, 128);
+  servo1.write(90);
+  delay(30);
+  servo2.write(90);
+  delay(30);
+  // Make sure it doesnt shoot on startup
   digitalWrite(shoot, LOW);
 }
 
 void loop() {
-  if (Serial.available()){
+  // If serial port sends data
+  if (Serial.available()) {
+    // Take input and hold it as the device
     char device = Serial.read();
+    // Wait until more data is recieved
     while(!Serial.available()){}
+    // Call this data the command
     int command = Serial.read();
-    switch(device){
-      case 'A': //servo1
-        analogWrite(servo1, int(command));  //move to location
+    switch (device) {
+      case 'A': // Servo1
+        servo1.write(command);  // Move to location
+        break;
       case 'B': //servo2
-        analogWrite(servo2, int(command));  //move to location
-      case 'C': //shoot
-        // turn on and off, shoot
+        servo2.write(command);  // Move to location
+        break;
+      case 'C':
         digitalWrite(shoot, HIGH);
         delay(500);
         digitalWrite(shoot, LOW);
+        break;
       default:
         break;
     }
-  }  
+  }
 }
