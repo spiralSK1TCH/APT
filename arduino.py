@@ -6,8 +6,11 @@ def writeToArduino(servo, degree=90):
     arduinoPort.write(servo.encode())
     arduinoPort.write(bytes([degree]))
 
+# Try to connect to the arduino
+
+
 # Open port at 115200 baud rate
-arduinoPort = serial.Serial("/dev/ttyACM1", 115200)     
+arduinoPort = serial.Serial("/dev/ttyACM1", 115200)
 
 # Set up server to tcp port
 # Get context to set up the TCP port

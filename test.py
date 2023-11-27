@@ -9,7 +9,10 @@ class Vidstream():
 
     # Sets up key variables
     def __init__(self):
-        
+        # Instantiate classes that are used by vidstream
+        self.arduinoControl = Arduino()                     # Give the vidstream the Arduino
+        self.tracker = TrackRec()  
+
         self.vidstream = cv.VideoCapture(-1,cv.CAP_V4L)         # Connect to last connected camera/webcam
         self.window = cv.namedWindow("frame")                   # Create a window named frame to display things on
         cv.setMouseCallback("frame", mouseCallback, self)       # Clicks on the frame window get handled by a function that references the function
@@ -18,9 +21,7 @@ class Vidstream():
             print("Check if turret is attached")
             raise FileNotFoundError("Turret is not attached")
         self.vidstream.open(-1)
-        # Instantiate classes that are used by vidstream
-        self.arduinoControl = Arduino()                     # Give the vidstream the Arduino
-        self.tracker = TrackRec()                           # Give the vidstream access to the object tracking and recognition function
+                         # Give the vidstream access to the object tracking and recognition function
 
     # Loop that constantly updates the frame 
     def stream(self,graph=None):    
@@ -46,7 +47,7 @@ class Vidstream():
     # Shows the current frame to the user
     def displayStream(self):
         #Show frame to user in a window named "frame"
-        cv.imshow("frame", self.capture) 
+        cv.imshow("frame", self.tracker.find(self.capture)) 
         # Wait for one second for user input (this also allows adequate time for the screen to display a frame)
         command = cv.waitKey(1) 
         # If the user enters q, they want to quit, so return False. Otherwise, return True.
@@ -141,13 +142,6 @@ class Arduino():
 
 
 # Track and records target positions
-class TrackRec():
-    def __init__(self):
-        pass
-
-# Plaseholder function
-def func():
-    pass
 
 # Placeholder function specifically for the setMouseCalback function
 def mouseCallback(event, x, y, flags, vidstreamInstance):
@@ -212,7 +206,26 @@ class TrackRec():
             # Find centre of rectangle
             centre = (x+(w/2),y+(h/2))
             self.lastSeenPositions.append(centre)
+
+    # Create mask of only the red colours
+    def find(self,frame):
+        # Convert pixels to hsv values
+        hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)# OBJECT TRACKING IN RGB
+
+        # lower mask (0-10)
+        lowerRed = np.array([0,100,100])
+        upperRed = np.array([10,255,255])
+        mask = cv.inRange(hsv, lowerRed, upperRed)
+
+        # upper mask (170-180)
+        lower_red = np.array([160,50,50])
+        upper_red = np.array([180,255,255])
         
+        # join my masks
+        #mask = mask0+mask1
+        # Only return red values
+        self.isolated = cv.bitwise_and(hsv,hsv,mask=mask)
+        return self.isolated        
 
          
 
