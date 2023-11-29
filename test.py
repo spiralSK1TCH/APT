@@ -215,14 +215,14 @@ class TrackRec():
         # lower mask (0-10)
         lowerRed = np.array([0,100,100])
         upperRed = np.array([10,255,255])
-        mask = cv.inRange(hsv, lowerRed, upperRed)
+        mask0 = cv.inRange(hsv, lowerRed, upperRed)
 
         # upper mask (170-180)
-        lower_red = np.array([160,50,50])
-        upper_red = np.array([180,255,255])
-        
+        lowerRed = np.array([160,50,50])
+        upperRed = np.array([179,255,255])
+        mask1 = cv.inRange(hsv, lowerRed, upperRed)
         # join my masks
-        #mask = mask0+mask1
+        mask = mask0+mask1
         # Only return red values
         self.isolated = cv.bitwise_and(hsv,hsv,mask=mask)
         return self.isolated        
