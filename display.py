@@ -1,5 +1,7 @@
 import os, sys
 from PyQt5.QtWidgets import QHBoxLayout, QMainWindow, QApplication, QLabel, QLineEdit, QWidget, QPushButton, QVBoxLayout 
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import *
 import passwordDatabase 
 # Login Screen
 class MainWindow(QMainWindow):
@@ -20,7 +22,6 @@ class MainWindow(QMainWindow):
         self.username.setPlaceholderText("Username")
         self.password.setPlaceholderText("Password")
         submit.setText("Submit")
-        
         # When button is clicked, activate the password checker
         submit.clicked.connect(self.submit)
 
@@ -39,6 +40,8 @@ class MainWindow(QMainWindow):
         # ntry in the database
         if passwordDatabase.searchDB(self.username.text()):
             if passwordDatabase.passwordCheckDB(self.username.text(), self.password.text()):
+                # Update last login date 
+                passwordDatabase.updateDate(self.username.text())
                 # Login and move to main menu
                 self.mainMenu() 
             else:
@@ -86,6 +89,8 @@ class MainWindow(QMainWindow):
         os.system("python test.py")
         self.show()
 
+    # 
+
 passwordDatabase.setup()
 app = QApplication(sys.argv)
 
@@ -93,3 +98,4 @@ login = MainWindow()
 login.show()
 
 app.exec()
+passwordDatabase.closeDB()

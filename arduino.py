@@ -10,8 +10,15 @@ def writeToArduino(servo, degree=90):
 
 
 # Open port at 115200 baud rate
-arduinoPort = serial.Serial("/dev/ttyACM1", 115200)
+try:
+    arduinoPort = serial.Serial("/dev/ttyACM1", 115200)
+except:
+    pass
 
+try:
+    arduinoPort = serial.Serial("/dev/ttyACM2", 115200)
+except:
+    exit(0)        
 # Set up server to tcp port
 # Get context to set up the TCP port
 context = zmq.Context()
