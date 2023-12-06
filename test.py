@@ -219,8 +219,37 @@ class TrackRec():
         if not self.faceCascade.load(cv.samples.findFile(".venv/lib64/python3.11/site-packages/cv2/data/haarcascade_frontalface_default.xml")):
             print("No face cascade found")
             exit(0)
-        # Activate.tracker tracker
-        self.tracker = cv.legacy.TrackerCSRT_create()
+         # Get context to set up the TCP port
+        context = zmq.Context()
+        # Create a reply socket on this port
+        socket = context.socket(zmq.REP)
+        # Bind the reply socket to the TCP port
+        socket.bind("tcp://*:5556")
+        tracker = socket.recv()
+        match tracker:
+            # Initialise BOOSTING algorithm
+            case b"0":
+                self.tracker = cv.legacy.TrackerBoosting_create()
+                print("yo")
+            # Initialise MIL algorithm
+            case b"1":
+                self.tracker = cv.legacy.TrackerMIL_create()
+            # Initialise KCF algorithm
+            case b"2":
+                self.tracker = cv.legacy.TrackerKCF_create()
+            # Initialise TLD algorithm
+            case b"3":
+                self.tracker = cv.legacy.TrackerTLD_create()
+            # Initialise MedianFlow algorithm
+            case b"4":
+                self.tracker = cv.legacy.TrackerMedianFlow_create()
+            # Initialise Mosse algorithm
+            case b"5":
+                self.tracker = cv.legacy.TrackerMOSSE_create()
+            # Initialise CSRT algorithm
+            case b"6":
+                self.tracker = cv.legacy.TrackerCSRT_create()
+
 
     # Face recognition method
     def findFaces(self,frame):
@@ -322,15 +351,21 @@ class TrackRec():
     def track(self, frame):
         returned, bbox = self.tracker.update(frame)
         if returned:
-            # find xcoordinate of centre.
-            xcoord = bbox[0] + (bbox[2]/2)
-            # find ycoord of centre.
-            ycoord = bbox[1] + (bbox[3]/2)
+            # get the box coordinates
+            (x, y, w, h) = [int(v) for v in bbox]
+            print(x,y,w,h)
+            # find xcoordinate of centre 
+            xcoord = int(x + (w/2))
+            # find ycoord of centre
+            ycoord = int(y + (h/2))
             centre = (xcoord,ycoord)
             self.lastSeenPositions.append(centre)
-            print(centre)
+           
+
+            # use predicted bounding box coordinates to draw a rectangle
         return returned
 
+# Give the vidstream access to the object tracking and recognition function
 
          
 
