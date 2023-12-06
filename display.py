@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 import passwordDatabase 
 import zmq
+import re
 # Login Screen
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -103,16 +104,21 @@ class MainWindow(QMainWindow):
             self.trackerButtons[trackers[i]].clicked.connect(lambda state, currentButton = i: self.chooseTracker(currentButton))
             buttonLayout.addWidget(self.trackerButtons[trackers[i]], int(i//3), int(i%3))
         # Set CSRT as clicked down
-        self.trackerButtons["CSRT"].setChecked(True)
+        self.trackerButtons[trackers[self.currentTracker]].setChecked(True)
+        # Create button that allows user to add a new user
+        addNewUser = QPushButton()
+        addNewUser.setText("Add New User")
+        addNewUser.clicked.connect(self.newUserMenu)
         # Create back button, bound to mainMenu
-        back = QPushButton()
-        back.setText("Back")
-        back.clicked.connect(self.mainMenu)
+        self.back = QPushButton()
+        self.back.setText("Back")
+        self.back.clicked.connect(self.mainMenu)
         # Create overarching vertical layout
         optionLayout = QVBoxLayout()
         # Add all sub layouts to this overarching layout
         optionLayout.addLayout(buttonLayout)
-        optionLayout.addWidget(back)
+        optionLayout.addWidget(addNewUser)
+        optionLayout.addWidget(self.back)
         # Create widget to attach these layouts to 
         self.widget = QWidget()
         self.widget.setLayout(optionLayout)
@@ -140,9 +146,65 @@ class MainWindow(QMainWindow):
 
     # Define new username
     def newUserMenu(self):
+        # Set a simple vertical layout
+        layout = QVBoxLayout()
+        # Set up a widget to be a central widget (displayed) 
+        widget = QWidget()
+        # Set up input widgits (the username, password and confirm password textboxes and and back submit buttons)
+        self.newUsername = QLineEdit()
+        self.newPassword = QLineEdit()
+        self.newConfirmPassword = QLineEdit()
+        self.newSubmit = QPushButton()
+        self.newBack = QPushButton()
+        self.newUsername.setPlaceholderText("Username")
+        self.newPassword.setPlaceholderText("Password")
+        self.newConfirmPassword.setPlaceholderText("Confirm Password")
+        self.newSubmit.setText("Submit")
+        self.newBack.setText("Back")
+        # When button is clicked, activate the password checker
+        self.newSubmit.clicked.connect(self.checkCredentials)
+        # Make the submit button get pressed when you press the enter key
+        self.newSubmit.setAutoDefault(True)
+        # Make test in the texbox not visible 
+        self.newPassword.setEchoMode(QLineEdit.Password)
+        self.newConfirmPassword.setEchoMode(QLineEdit.Password)
+        # Add layouts to the vertical boxes
+        layout.addWidget(self.newUsername)
+        layout.addWidget(self.newPassword)
+        layout.addWidget(self.new)
+        layout.addWidget(self.new)
+        # Make this layout one widget, then set it as the central widget
+        widget.setLayout(layout)
+        self.setCentralWidget(widget)
 
         pass
 
+    # Check the sign up username and password
+    def checkCredentials(self):
+        if passwordDatabase.searchDB(self.newUsername.text()):
+            # return a textbox that says username is already in username
+            pass
+        if not self.newUsername.text().isalnum():
+            # return a textbox that says "invalid characters in string"
+            pass
+        if self.newPassword.text() == self.newConfirmPassword.text():
+            if len(self.newPassword.text()) < 8:
+                # return a textbox that says password too short
+                pass
+            elif re.search('[0-9]',password) is None:
+                # return a textbox that 
+            elif re.search('[A-Z]',password) is None: 
+                print("Make sure your password has a capital letter in it")
+            else:
+                print("Your password seems fine")
+     
+     
+     
+     
+     
+     
+     
+     
     # 
 
 passwordDatabase.setup()
