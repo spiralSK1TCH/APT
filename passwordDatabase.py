@@ -55,6 +55,12 @@ def updateDate(username):
     c.execute(f'''UPDATE Passwords
                   SET lastLogin = {currentdate.strftime("%x")}
                   WHERE username = {username}''')
+def addUser(username, password):
+    salt = bcrypt.gensalt()
+    encryptedPassword = str(bcrypt.hashpw(password.encode(), salt))
+    date = datetime.datetime.now()
+    c.execute(f'''INSERT INTO Passwords VALUES ("{username}","{encryptedPassword}","{date.strftime("%x")}")''')
+    DB.commit()
 
 def closeDB():
     DB.commit()

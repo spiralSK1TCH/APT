@@ -161,8 +161,14 @@ class MainWindow(QMainWindow):
         self.newConfirmPassword.setPlaceholderText("Confirm Password")
         self.newSubmit.setText("Submit")
         self.newBack.setText("Back")
+        # Set buttons to be next to each other
+        hlayout = QHBoxLayout()
+        hlayout.addWidget(self.newBack)
+        hlayout.addWidget(self.newSubmit)
         # When button is clicked, activate the password checker
         self.newSubmit.clicked.connect(self.checkCredentials)
+        # When back button is clicked, go back to options
+        self.newBack.clicked.connect(self.optionMenu)
         # Make the submit button get pressed when you press the enter key
         self.newSubmit.setAutoDefault(True)
         # Make test in the texbox not visible 
@@ -171,32 +177,52 @@ class MainWindow(QMainWindow):
         # Add layouts to the vertical boxes
         layout.addWidget(self.newUsername)
         layout.addWidget(self.newPassword)
-        layout.addWidget(self.new)
-        layout.addWidget(self.new)
+        layout.addWidget(self.newConfirmPassword)
+        layout.addLayout(hlayout)
         # Make this layout one widget, then set it as the central widget
         widget.setLayout(layout)
         self.setCentralWidget(widget)
 
-        pass
-
     # Check the sign up username and password
     def checkCredentials(self):
-        if passwordDatabase.searchDB(self.newUsername.text()):
-            # return a textbox that says username is already in username
-            pass
-        if not self.newUsername.text().isalnum():
+        # Save the strins in the textbox to variables
+        enteredUsername = self.newUsername.text()
+        enteredPassword = self.newPassword.text()
+        enteredConfirmPassword = self.newConfirmPassword.text()
+        # create message box to display what is happening
+        self.messageBox = QMessageBox()
+
+        if passwordDatabase.searchDB(enteredUsername):
+            # return a textbox that says username is already in use
+            self.messageBox.setText("Username already in use")
+        elif not enteredUsername.isalnum():
             # return a textbox that says "invalid characters in string"
-            pass
-        if self.newPassword.text() == self.newConfirmPassword.text():
-            if len(self.newPassword.text()) < 8:
+            self.messageBox.setText("Invalid characters in username")
+        elif enteredPassword == enteredConfirmPassword:
+            if len(enteredPassword) < 8:
                 # return a textbox that says password too short
-                pass
-            elif re.search('[0-9]',password) is None:
-                # return a textbox that 
-            elif re.search('[A-Z]',password) is None: 
-                print("Make sure your password has a capital letter in it")
+                self.messageBox.setText("Password too short")
+            elif re.search('[0-9]', enteredPassword) is None:
+                # return a textbox that says password doesnt contain a number
+                self.messageBox.setText("include a number in your password")
+            elif re.search('[A-Z]', enteredPassword) is None: 
+                # return textbox that complains about no capitals
+                self.messageBox.setText("Please include capitals in your password")
+            elif re.search('[a-z]', enteredPassword) is None: 
+                # return textbox that complains about no lowercase
+                self.messageBox.setText("Please include lowercase in your password")
             else:
-                print("Your password seems fine")
+                # add entry to datebase 
+                passwordDatabase.addUser(enteredUsername, enteredPassword)
+                # Then display to the user that 
+                self.messageBox.setText("User Added")
+        else:
+            # Display that the two passwordsare not the same
+            self.messageBox.setText("Passwords are not the same")
+        self.messageBox.exec_()
+        self.newUsername.clear()
+        self.newPassword.clear()
+        self.newConfirmPassword.clear()
      
      
      
@@ -205,7 +231,7 @@ class MainWindow(QMainWindow):
      
      
      
-    # 
+N    # 
 
 passwordDatabase.setup()
 app = QApplication(sys.argv)
