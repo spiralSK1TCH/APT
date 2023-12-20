@@ -43,4 +43,5 @@ while True:
 print("done")
 arduinoPort.close()
 socket.close()
+context.destroy()
 exit(0)

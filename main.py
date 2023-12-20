@@ -3,7 +3,8 @@ import numpy as np
 import cv2 as cv
 import zmq
 import os
-import json
+
+context = zmq.Context()
 
 # Class for controling camera input 
 class Vidstream():
@@ -61,15 +62,19 @@ class Vidstream():
             # If a graph exists, plot it
             if graph.a:
                 graph.displayPlot(self.capture)
-                print("plotted")
             # print information on the screen
 
             cv.putText(self.capture, 
             f"Face Detected? = {self.tracker.face}", (0,405), 1, 2,(0,255,0), 2)
             cv.putText(self.capture, 
             f"Obj Detected? = {bool(detectionStage)}", (0,430), 1, 2,(0,255,0), 2)
-            cv.putText(self.capture, 
-            f"Obj Speed = N/A", (0,455), 1, 2,(0,255,0), 2)
+            # If there are last seen positions, show object speed
+            if "N/A" in self.tracker.lastSeenPositions[-3:]:
+                cv.putText(self.capture, 
+                f"Obj Speed = N/A", (0,455), 1, 2,(0,255,0), 2)
+            else:
+                cv.putText(self.capture, 
+                f"Obj Speed = {graph.speed(self.tracker.lastSeenPositions[-3][0],self.tracker.lastSeenPositions[-1][0])}", (0,455), 1, 2,(0,255,0), 2)
             cv.putText(self.capture, 
             f"Target Postion = {self.tracker.lastSeenPositions[-1]}", (0,480), 1, 2,(0,255,0), 2)
 
@@ -97,12 +102,13 @@ class Vidstream():
         cv.destroyAllWindows()
         socket.send_string("X")
         socket.close()
+        context.destroy()
 
 # Class to find equation of projectile movement
 class Graph():
     
     def __init__(self):
-        
+        self.targetSpeed = "N/A"
         self.x  = [0]*81                # List of x coordinates we apply the equation y = ax2 + bx + c to
         self.x2 = [0]*81                # Predifined x2 list for faster calculations 
         # Giving the list the values of the 8 times table
@@ -143,6 +149,11 @@ class Graph():
         self.b = np.take(coefficients,1)
         self.c = np.take(coefficients,2)
     
+    def speed(self,x1,x2):
+        self.targetSpeed = (x2-x1)/2
+        return self.targetSpeed
+
+    
     # Finds the y value for each x value
     def points(self):
         try:
@@ -180,7 +191,7 @@ class TrackRec():
     # Setup
     def __init__(self):
         # Hold stack of last seen positions
-        self.lastSeenPositions = ["N/A"]
+        self.lastSeenPositions = ["N/A","N/A","N/A"]
         # Call classifier method for targets and faces
         self.faceCascade = cv.CascadeClassifier()
         # is face in frame?
@@ -190,7 +201,6 @@ class TrackRec():
             print("No face cascade found")
             exit(0)
          # Get context to set up the TCP port
-        context = zmq.Context()
         # Create a reply socket on this port
         socket = context.socket(zmq.REP)
         # Bind the reply socket to the TCP port
@@ -347,7 +357,6 @@ class Arduino():
         print("Connecting to Arduino...")
         try:
             # Get context to set up the TCP port
-            context = zmq.Context()
             # Create a request socket on this port (Global so it can be shutdown)
             global socket
             socket = context.socket(zmq.REQ)
@@ -359,7 +368,9 @@ class Arduino():
     
     def moveTurret(self, coordinates, TargetDepthSpeed=None):
         socket.send_string(f"A {(coordinates[0]-180)*0.25}")
+        _ = socket.recv()
         socket.send_string(f"B {(coordinates[1]-180)*0.25}")
+        _ = socket.recv()
 
     
     def shootTurret(self):
@@ -375,6 +386,7 @@ def mouseCallback(event, x, y, flags, vidstreamInstance):
         case cv.EVENT_LBUTTONDOWN:   
             # Draw crosshairs
             
+            print("case")
             # Move the turret to that location and shoot
             vidstreamInstance.arduinoControl.moveTurret((x,y))
             vidstreamInstance.arduinoControl.shootTurret()
