@@ -3,6 +3,7 @@ import numpy as np
 import cv2 as cv
 import zmq
 import os
+import json
 
 # Class for controling camera input 
 class Vidstream():
@@ -41,13 +42,11 @@ class Vidstream():
                     # if in first detection stage, search frame for red circles, then increment stage 
                     if self.tracker.find(self.capture):
                         detectionStage += 1
-                        print(detectionStage)
                         
                 case 1:
                     if self.tracker.track(self.capture):
-                        
                         detectionStage += 1
-                        print(detectionStage)
+
                         
          
                     else:
@@ -61,7 +60,19 @@ class Vidstream():
                     detectionStage = 0
             # If a graph exists, plot it
             if graph.a:
-                graph.displayPlot(self)
+                graph.displayPlot(self.capture)
+                print("plotted")
+            # print information on the screen
+
+            cv.putText(self.capture, 
+            f"Face Detected? = {self.tracker.face}", (0,405), 1, 2,(0,255,0), 2)
+            cv.putText(self.capture, 
+            f"Obj Detected? = {bool(detectionStage)}", (0,430), 1, 2,(0,255,0), 2)
+            cv.putText(self.capture, 
+            f"Obj Speed = N/A", (0,455), 1, 2,(0,255,0), 2)
+            cv.putText(self.capture, 
+            f"Target Postion = {self.tracker.lastSeenPositions[-1]}", (0,480), 1, 2,(0,255,0), 2)
+
  
             # Or if the user tells you to stop, stop
             frame = self.displayStream()
@@ -96,10 +107,8 @@ class Graph():
         self.x2 = [0]*81                # Predifined x2 list for faster calculations 
         # Giving the list the values of the 8 times table
         for i in range(81):
-            self.x[i] = i*8
-        # Giving x2 the value of the square of x
-        for i in range(81):
-            self.x2[i]= i**2
+            self.x[i] = i*8 # DELETED PART WHERE I RAN LOOP CODE 2CE
+            self.x2[i]= self.x[i]**2
         
         # variable is declared as None so existancecan be checked
         self.a = None
@@ -109,45 +118,52 @@ class Graph():
         # If the x coordinates are all the same, defer to linearPlot
         if coord1[0] == coord2[0] or coord1[0] == coord3[0] or coord2[0] == coord3[0]:
             return self.linearPlot(coord1, coord2, coord3)
-        print(coord1, coord2, coord3)
+        # If duplicates in x cooordinates, skip
+        dup = coord1[0], coord2[0], coord3[0]
+        self.coord1 = coord1
+        self.coord2 = coord2
+        self.coord3 = coord3
+        if len(set(dup)) != len(dup):
+            pass
         # given 3 points, plot parabola
         matrix = np.array([[coord1[0]**2,coord1[0],1]
                           ,[coord2[0]**2,coord2[0],1]
                           ,[coord3[0]**2,coord3[0],1]
-                          ])
+                          ], copy = True)
         solutions = np.array([[coord1[1]]
                              ,[coord2[1]]
                              ,[coord3[1]]
                              ])
         # Inverse matrix        
         inverseMatrix = np.linalg.inv(matrix) 
-        print(matrix)
-        print(solutions)
-        print(inverseMatrix)
 
         # Multiply the inverse matrix and solution matrix to get the matrix of coefficents to 3dp
         coefficients = np.around(np.dot(inverseMatrix,solutions),decimals=3)
-        print(coefficients)  
         self.a = np.take(coefficients,0)
         self.b = np.take(coefficients,1)
         self.c = np.take(coefficients,2)
     
     # Finds the y value for each x value
     def points(self):
-        
-        x2term = np.multiply(self.a,self.x2)    # a multiplied over x2
-        xterm  = np.multiply(self.b,self.x)     # b multiplied over x
-        cterm  = self.c
-        yterm  = (x2term+xterm+cterm)           # add together ax2 + bx +c to get y
-        self.y = yterm.astype(int)              # y must be a list of integers, as all pixel coordinates are integers
+        try:
+            x2term = np.multiply(self.a,self.x2)    # a multiplied over x2
+            xterm  = np.multiply(self.b,self.x)     # b multiplied over x
+            cterm  = self.c
+            yterm  = (x2term+xterm+cterm)           # add together ax2 + bx +c to get y
+            self.y = yterm.astype(int)              # y must be a list of integers, as all pixel coordinates are integers
+        except:
+            pass
     
     # Display the prediction plot on screen
     def displayPlot(self,img):
         #print(self.y)
+        cv.circle(img, (self.coord1[0], self.coord1[1]), 3, (0,0,255), 1)
+        cv.circle(img, (self.coord2[0], self.coord2[1]), 3, (0,0,255), 1)
+        cv.circle(img, (self.coord3[0], self.coord3[1]), 3, (0,0,255), 1)
         for i in range(len(self.x)): # for every x value
             # Try to draw a line between the current coordinate and the next coordinate
             try:
-                cv.line(img.capture,(self.x[i], self.y[i]), (self.x[i+1], self.y[i+1]), (0,0,0), 5)
+                cv.line(img, (self.x[i], self.y[i]), (self.x[i+1], self.y[i+1]), (0,0,0), 5)
             # If that throws an error (like the point is out of the image), move on t next point
             except:
                 pass
@@ -157,54 +173,6 @@ class Graph():
         #self.x = (coord1[0],coord1[0])
         #self.y = (0,480)
         pass
-# Arduino control class
-class Arduino():
-
-    # Initialise connection with the arduino.py file
-    def __init__(self):
-        os.system("./arduinoRun.sh")
-        print("Connecting to Arduino...")
-        try:
-            # Get context to set up the TCP port
-            context = zmq.Context()
-            # Create a request socket on this port (Global so it can be shutdown)
-            global socket
-            socket = context.socket(zmq.REQ)
-            # Bind the request socket to the TCP port
-            socket.connect("tcp://localhost:5555")
-        except:
-            print("Could not connect")
-            exit(0)
-    
-    def moveTurret(self, coordinates, TargetDepthSpeed=None):
-        pass
-    
-    def shootTurret(self):
-        pass
-
-
-# Track and records target positions
-
-# Placeholder function specifically for the setMouseCalback function
-def mouseCallback(event, x, y, flags, vidstreamInstance):
-    match event:
-        # If the event is a leftclick 
-        case cv.EVENT_LBUTTONDOWN:   
-            # Draw crosshairs
-            
-            # Move the turret to that location and shoot
-            vidstreamInstance.arduinoControl.moveTurret((x,y))
-            vidstreamInstance.arduinoControl.shootTurret()
-        
-
-        # If the event is a rightclick
-        case cv.EVENT_RBUTTONDOWN:
-            pass
-
-def drawCrosshairs(x, y, vidstreamInstance = None):
-    if not vidstreamInstance:
-        pass
-
 
 # Class that identifies and tracks targets
 class TrackRec():
@@ -212,9 +180,11 @@ class TrackRec():
     # Setup
     def __init__(self):
         # Hold stack of last seen positions
-        self.lastSeenPositions = []
+        self.lastSeenPositions = ["N/A"]
         # Call classifier method for targets and faces
         self.faceCascade = cv.CascadeClassifier()
+        # is face in frame?
+        self.face = False
         # Load cascade classifiers, if not found exit
         if not self.faceCascade.load(cv.samples.findFile(".venv/lib64/python3.11/site-packages/cv2/data/haarcascade_frontalface_default.xml")):
             print("No face cascade found")
@@ -260,9 +230,12 @@ class TrackRec():
         # Detect faces
         faces = self.faceCascade.detectMultiScale(frameGray, 1.1 ,4)
         # for each rectangle in faces
+        face = False
         for (x,y,w,h) in faces:
             # Draw box around faces
             cv.rectangle(frame, (x,y), (x+w, y+h),(255,0,0), 2 )
+            face = True
+        self.face = face
 
     # Target recognition method
     def findTargets(self, frame):
@@ -364,6 +337,56 @@ class TrackRec():
 
             # use predicted bounding box coordinates to draw a rectangle
         return returned
+
+# Arduino control class
+class Arduino():
+
+    # Initialise connection with the arduino.py file
+    def __init__(self):
+        os.system("./Hardware/arduinoRun.sh")
+        print("Connecting to Arduino...")
+        try:
+            # Get context to set up the TCP port
+            context = zmq.Context()
+            # Create a request socket on this port (Global so it can be shutdown)
+            global socket
+            socket = context.socket(zmq.REQ)
+            # Bind the request socket to the TCP port
+            socket.connect("tcp://localhost:5555")
+        except:
+            print("Could not connect")
+            exit(0)
+    
+    def moveTurret(self, coordinates, TargetDepthSpeed=None):
+        socket.send_string(f"A {(coordinates[0]-180)*0.25}")
+        socket.send_string(f"B {(coordinates[1]-180)*0.25}")
+
+    
+    def shootTurret(self):
+        socket.send_string(f"C done")
+
+
+# Track and records target positions
+
+# Placeholder function specifically for the setMouseCalback function
+def mouseCallback(event, x, y, flags, vidstreamInstance):
+    match event:
+        # If the event is a leftclick 
+        case cv.EVENT_LBUTTONDOWN:   
+            # Draw crosshairs
+            
+            # Move the turret to that location and shoot
+            vidstreamInstance.arduinoControl.moveTurret((x,y))
+            vidstreamInstance.arduinoControl.shootTurret()
+        
+
+        # If the event is a rightclick
+        case cv.EVENT_RBUTTONDOWN:
+            pass
+
+def drawCrosshairs(x, y, vidstreamInstance = None):
+    if not vidstreamInstance:
+        pass
 
 # Give the vidstream access to the object tracking and recognition function
 

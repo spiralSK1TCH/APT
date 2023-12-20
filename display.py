@@ -2,7 +2,7 @@ import os, sys
 from PyQt5.QtWidgets import QHBoxLayout, QMainWindow, QApplication, QLabel, QLineEdit, QWidget, QPushButton, QVBoxLayout 
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
-import passwordDatabase 
+from Database import passwordDatabase  
 import zmq
 import re
 # Login Screen
@@ -231,7 +231,7 @@ class MainWindow(QMainWindow):
      
      
      
-N    # 
+    # 
 
 passwordDatabase.setup()
 app = QApplication(sys.argv)
