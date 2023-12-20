@@ -141,7 +141,7 @@ class MainWindow(QMainWindow):
         socket.connect("tcp://localhost:5556")
         socket.send_string(str(self.currentTracker))
         socket.close()
-        os.system("python test.py")
+        os.system("python main.py")
         self.show()
 
     # Define new username

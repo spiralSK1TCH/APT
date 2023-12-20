@@ -1,3 +1,3 @@
 #!/bin/bash
 pkill arduino.py
-python ./arduino.py &
+python Hardware/arduino.py &
